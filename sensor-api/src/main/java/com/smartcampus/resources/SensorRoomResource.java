@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.smartcampus.exceptions.DataNotFoundException; // <-- Importing our custom exception
+
 @Path("/rooms") // This maps to /api/v1/rooms
 @Produces(MediaType.APPLICATION_JSON) // Every response from here will be JSON
 @Consumes(MediaType.APPLICATION_JSON) // Expects incoming data to be JSON
@@ -51,9 +53,8 @@ public class SensorRoomResource {
     public Response getRoom(@PathParam("roomId") String roomId) {
         Room room = rooms.get(roomId);
         if (room == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                           .entity("{\"error\": \"Room not found\"}")
-                           .build();
+            // Part 5: Throwing our custom exception instead of building a Response!
+            throw new DataNotFoundException("Room with ID " + roomId + " was not found in the system.");
         }
         return Response.ok(room).build();
     }
