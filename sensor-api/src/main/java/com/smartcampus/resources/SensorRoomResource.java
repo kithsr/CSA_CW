@@ -2,6 +2,7 @@ package com.smartcampus.resources;
 
 import com.smartcampus.database.DatabaseClass;
 import com.smartcampus.models.Room;
+import com.smartcampus.models.Sensor; // <-- Added this crucial import
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
@@ -78,5 +79,32 @@ public class SensorRoomResource {
         
         rooms.remove(roomId);
         return Response.noContent().build(); // 204 No Content represents a successful deletion
+    }
+
+    // 5. GET /api/v1/rooms/{roomId}/sensors : Deep Nesting (Part 4)
+    @GET
+    @Path("/{roomId}/sensors")
+    public Response getSensorsInRoom(@PathParam("roomId") String roomId) {
+        Room room = rooms.get(roomId);
+        
+        // 1. Check if the room exists
+        if (room == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                           .entity("{\"error\": \"Room not found\"}")
+                           .build();
+        }
+
+        // 2. Fetch the actual sensor objects that belong to this room
+        Map<String, Sensor> allSensors = DatabaseClass.getSensors();
+        List<Sensor> roomSensors = new ArrayList<>();
+
+        for (String sensorId : room.getSensorIds()) {
+            if (allSensors.containsKey(sensorId)) {
+                roomSensors.add(allSensors.get(sensorId));
+            }
+        }
+
+        // 3. Return the full list of sensor data
+        return Response.ok(roomSensors).build();
     }
 }
