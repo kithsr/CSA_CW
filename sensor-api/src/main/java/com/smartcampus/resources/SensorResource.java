@@ -62,4 +62,11 @@ public class SensorResource {
 
         return Response.ok(sensorList).build();
     }
+
+    // 3. Sub-Resource Locator for nested readings (PART 4)
+    @Path("/{sensorId}/readings")
+    public SensorReadingResource getSensorReadingResource(@PathParam("sensorId") String sensorId) {
+        // We pass the sensorId down into the new class!
+        return new SensorReadingResource(sensorId);
+    }
 }
