@@ -2,7 +2,7 @@ package com.smartcampus.resources;
 
 import com.smartcampus.database.DatabaseClass;
 import com.smartcampus.models.Room;
-import com.smartcampus.models.Sensor; // <-- Added this crucial import
+import com.smartcampus.models.Sensor; 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -13,11 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.smartcampus.exceptions.DataNotFoundException; // <-- Importing our custom exception
+import com.smartcampus.exceptions.DataNotFoundException; 
+import com.smartcampus.exceptions.RoomNotEmptyException; // <-- NEW: Added Part 5 exception import
 
-@Path("/rooms") // This maps to /api/v1/rooms
-@Produces(MediaType.APPLICATION_JSON) // Every response from here will be JSON
-@Consumes(MediaType.APPLICATION_JSON) // Expects incoming data to be JSON
+@Path("/rooms") 
+@Produces(MediaType.APPLICATION_JSON) 
+@Consumes(MediaType.APPLICATION_JSON) 
 public class SensorRoomResource {
 
     // Access our thread-safe "database"
@@ -32,17 +33,14 @@ public class SensorRoomResource {
     // 2. POST /api/v1/rooms : Enable creation of new rooms
     @POST
     public Response addRoom(Room room, @Context UriInfo uriInfo) {
-        // Ensure the room has an ID
         if (room.getId() == null || room.getId().trim().isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST)
                            .entity("{\"error\": \"Room ID is required\"}")
                            .build();
         }
         
-        // Save to our in-memory map
         rooms.put(room.getId(), room);
         
-        // Best Practice: Return a 201 Created status with the Location header pointing to the new resource
         URI uri = uriInfo.getAbsolutePathBuilder().path(room.getId()).build();
         return Response.created(uri).entity(room).build();
     }
@@ -53,7 +51,6 @@ public class SensorRoomResource {
     public Response getRoom(@PathParam("roomId") String roomId) {
         Room room = rooms.get(roomId);
         if (room == null) {
-            // Part 5: Throwing our custom exception instead of building a Response!
             throw new DataNotFoundException("Room with ID " + roomId + " was not found in the system.");
         }
         return Response.ok(room).build();
@@ -66,20 +63,16 @@ public class SensorRoomResource {
         Room room = rooms.get(roomId);
         
         if (room == null) {
-            // Idempotent behavior: If it doesn't exist, we still consider the deletion "successful" conceptually
             return Response.status(Response.Status.NOT_FOUND).build(); 
         }
         
-        // Business Logic Constraint: Prevent data orphans
+        // NEW PART 5 LOGIC: Throwing the custom exception to trigger our Mapper!
         if (room.getSensorIds() != null && !room.getSensorIds().isEmpty()) {
-            // Returns 409 Conflict. (We will upgrade this to a custom exception in Part 5)
-            return Response.status(Response.Status.CONFLICT)
-                           .entity("{\"error\": \"Cannot delete room: active sensors are assigned to it.\"}")
-                           .build();
+            throw new RoomNotEmptyException("The room is currently occupied by active hardware. Please remove all sensors before decommissioning the room.");
         }
         
         rooms.remove(roomId);
-        return Response.noContent().build(); // 204 No Content represents a successful deletion
+        return Response.noContent().build(); 
     }
 
     // 5. GET /api/v1/rooms/{roomId}/sensors : Deep Nesting (Part 4)
@@ -88,14 +81,12 @@ public class SensorRoomResource {
     public Response getSensorsInRoom(@PathParam("roomId") String roomId) {
         Room room = rooms.get(roomId);
         
-        // 1. Check if the room exists
         if (room == null) {
             return Response.status(Response.Status.NOT_FOUND)
                            .entity("{\"error\": \"Room not found\"}")
                            .build();
         }
 
-        // 2. Fetch the actual sensor objects that belong to this room
         Map<String, Sensor> allSensors = DatabaseClass.getSensors();
         List<Sensor> roomSensors = new ArrayList<>();
 
@@ -105,7 +96,6 @@ public class SensorRoomResource {
             }
         }
 
-        // 3. Return the full list of sensor data
         return Response.ok(roomSensors).build();
     }
 }
