@@ -25,6 +25,8 @@
 
 # Yes, the DELETE operation in this implementation is strictly idempotent.
 
+
+
 # Justification: In RESTful architecture, an operation is considered idempotent if making multiple identical requests has the exact same effect on the server's state as making a single request.
 
 # In this code, if a client mistakenly sends the exact same DELETE/api/v1/rooms/LTB-301 request three times in a row:
@@ -34,4 +36,18 @@
 #   2. Request 2 & 3: The server searches for LTB-301, sees that it evalates to null, and immediately returns a 404 Not Found status. Crucially, the state of the server's database remains completely unchanged by these subsequest requests. Because the final state of the server is identical whether the client fired the request once or one hundred times, the operation fulfills the strict definition of REST indempotency.
 
 # Part 02 end
+
+# Question 5
+
+# The @Consumes(MediaType.APPLICATION_JSON) annotation acts as a strict gateway filter for the method. If a client attempts to send data with a Content-Type header of text/plain or application/xml, the JAX-RS runtime (Jersey) intercepts the request before it even reaches our Java method execution.
+
+# Recognizing the mismatch between what the client send and what the endpoint aaccepts, JAX-RS automatically aborts the request and returns a standard 415 Unsupported Media Type HTTP status code to the client. The technical consequence is highly beneficial: it completely protects our backend logic from attempting to parse incompatible data formats, preventing runtime crashes and enforcing a strict, predictable API contract.
+
+# Question 6
+
+# In RESTful architecture, URIs should represent the resource hierarchy and identity, while query parameters should represent modifiers to the request.
+
+#  1. Semantic Correctness: The path /api/v1/sensors points to the entire collection of sensors. Filtering by type does not create a new hierarchical resource; it simply returns a modified view of the existing collection. Therefore, ?type=C02 is sematically correct.
+
+#  2. Optionality and Stacking: Query parameters are inherently optional, making it easy to use the exact same endpoint to fetch all sensors or a filtered list. Furthermore, query parameters stack cleanly  (e.g., ?type=C02&status=ACTIVE). If we used path variables (/api/v1/sensors/type/C02), the routing becomes incredibly rigid, deeply nested, and difficult to maintain if we want to add more optional filters in the future.
 
