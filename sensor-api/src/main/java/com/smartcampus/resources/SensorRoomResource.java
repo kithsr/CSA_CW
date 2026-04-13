@@ -3,11 +3,11 @@ package com.smartcampus.resources;
 import com.smartcampus.database.DatabaseClass;
 import com.smartcampus.models.Room;
 import com.smartcampus.models.Sensor; // <-- Added this crucial import
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.UriInfo;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
