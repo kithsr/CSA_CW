@@ -68,3 +68,17 @@
 # HTTP 422 (Unprocessable Entity) is far more semantically accurate. It explicitly tells the client: "The server understands the content type of your request, and the JSON syntaxx you sent is perfectly valid, but the server was unable to process the contained instructions due to semantic errors." In this specific case, the semantic error is a violation of referential integrity (attempting to map a sensor to a roomId that cannot be validated). Using 422 separates payload-logic errors from network-routing errors.
 
 
+# Question 9
+
+# Exposing internal Java stack traces is a severe "Information Disclosure" vulnerability. From a defensive cybersecurity standpoint, it violates the principle of least privilege regarding system information and provides attackers with free reconnaissance data.
+
+# When an API leaks a stack trace, an attacker can gather highly specific intelligence about the backend architecture, including:
+
+# 1. Framework Versions: The trace often reveals the exact versions of libraries being used (e.g., Jersey 2.35, Jackson, Hibernate). Attackers can cross-reference these specific versions against databases of known CVEs (Common Vulnerabilities and Exposures) to find pre-built exploits.
+
+# 2. Internal Infrastructure: Stack traces expose absolute file paths, directory structures, and package naming conventions (e.g., com.smartcampus.database), giving attackers a map of the server's file system.
+
+# 3. Database Architecture: If a SQL exception is leaked, the trace might expose table names, column names, or even the exact malformed SQL queries, paving the way for targeted SQL Injection attacks.
+
+# By utilizing a generic ExceptionMapper<Throwable>, we sanitize the output, returning a sterile 500 error that acknowledges the failure without handing attackers a blueprint of our internal systems.
+
