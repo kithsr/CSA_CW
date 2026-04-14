@@ -4,6 +4,8 @@ import com.smartcampus.database.DatabaseClass;
 import com.smartcampus.models.Sensor;
 import com.smartcampus.models.SensorReading;
 
+import com.smartcampus.exceptions.SensorUnavailableException;
+
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -47,11 +49,17 @@ public class SensorReadingResource {
                     .build();
         }
 
+        Sensor parentSensor = sensors.get(sensorId);
+
+        // NEW PART 5.3 LOGIC: Check the status state constraint!
+        if ("MAINTENANCE".equalsIgnoreCase(parentSensor.getStatus())) {
+            throw new SensorUnavailableException("Sensor is currently in MAINTENANCE mode. Physically disconnected hardware cannot accept new readings.");
+        }
+
         // 1. Save the reading to the historical log
         allReadings.computeIfAbsent(sensorId, k -> new ArrayList<>()).add(reading);
 
         // 2. THE SIDE EFFECT: Update the parent Sensor's currentValue
-        Sensor parentSensor = sensors.get(sensorId);
         parentSensor.setCurrentValue(reading.getValue());
 
         return Response.status(Response.Status.CREATED).entity(reading).build();
