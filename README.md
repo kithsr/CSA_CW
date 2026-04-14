@@ -25,8 +25,6 @@
 
 # Yes, the DELETE operation in this implementation is strictly idempotent.
 
-
-
 # Justification: In RESTful architecture, an operation is considered idempotent if making multiple identical requests has the exact same effect on the server's state as making a single request.
 
 # In this code, if a client mistakenly sends the exact same DELETE/api/v1/rooms/LTB-301 request three times in a row:
@@ -50,4 +48,23 @@
 #  1. Semantic Correctness: The path /api/v1/sensors points to the entire collection of sensors. Filtering by type does not create a new hierarchical resource; it simply returns a modified view of the existing collection. Therefore, ?type=C02 is sematically correct.
 
 #  2. Optionality and Stacking: Query parameters are inherently optional, making it easy to use the exact same endpoint to fetch all sensors or a filtered list. Furthermore, query parameters stack cleanly  (e.g., ?type=C02&status=ACTIVE). If we used path variables (/api/v1/sensors/type/C02), the routing becomes incredibly rigid, deeply nested, and difficult to maintain if we want to add more optional filters in the future.
+
+# Part 3 end
+
+# Question 7
+
+# The Sub-Resource Locator pattern is essential for managing complexity and adhering to the Single Responsibility Principle as an API Scales.
+
+# If we defined every deeply nested path (like /sensors/{id}/readings/{rid}) inside a single SensorResource class, that controller would quickly transform into an unmaintainable "God Object," consisting of thousands of lines of code handling unrelated business logic (e.g., sensor metadata processing alongside massive arrays of historical telemetry data).
+
+# By utilizing a Sub-Resource Locator, we achieve strict modularity. The parent class (SensorResource) acts purely as a routing gateway, capturing the {sensorId} and instantiating the SensorReadingResource. This delegation isolates the telemetry logic into its own encapsulated file. Furthermore, it completely decouples the sub-resource from absolute URIs; the SensorReadingResource operates entirely within its relative context, making the code much cleaner, highly reusable, and significantly easier to write unit tests for.
+
+# Part 4 end
+
+# Question 8
+
+# HTTP 404 (Not Found) implies that the target routing URL itself does not exist. If a client sends a POST request to /api/v1/sensors, that endpoint does exist and is actively listening. Returning a 404 in this scenario would be highly misleading, as the client would assume they have a typo in their URL path or that the server is down.
+
+# HTTP 422 (Unprocessable Entity) is far more semantically accurate. It explicitly tells the client: "The server understands the content type of your request, and the JSON syntaxx you sent is perfectly valid, but the server was unable to process the contained instructions due to semantic errors." In this specific case, the semantic error is a violation of referential integrity (attempting to map a sensor to a roomId that cannot be validated). Using 422 separates payload-logic errors from network-routing errors.
+
 
