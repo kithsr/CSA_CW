@@ -1,5 +1,7 @@
 package com.smartcampus.resources;
 
+import com.smartcampus.exceptions.LinkedResourceNotFoundException;
+
 import com.smartcampus.database.DatabaseClass;
 import com.smartcampus.models.Room;
 import com.smartcampus.models.Sensor;
@@ -25,11 +27,10 @@ public class SensorResource {
     // 1. POST /api/v1/sensors : Register a new sensor
     @POST
     public Response addSensor(Sensor sensor, @Context UriInfo uriInfo) {
-        // Business Logic: Verify the room actually exists before creating the sensor
+        
+        // NEW PART 5.2 LOGIC: Throw the custom exception for 422 mapping!
         if (sensor.getRoomId() == null || !rooms.containsKey(sensor.getRoomId())) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                           .entity("{\"error\": \"Invalid roomId. The specified room does not exist.\"}")
-                           .build();
+            throw new LinkedResourceNotFoundException("Cannot create sensor: The specified roomId '" + sensor.getRoomId() + "' does not exist in the system.");
         }
 
         if (sensor.getId() == null || sensor.getId().trim().isEmpty()) {
@@ -40,7 +41,6 @@ public class SensorResource {
 
         sensors.put(sensor.getId(), sensor);
 
-        // Automatically link the sensor to the room's internal list
         Room room = rooms.get(sensor.getRoomId());
         room.getSensorIds().add(sensor.getId());
 
