@@ -67,7 +67,6 @@
 
 # HTTP 422 (Unprocessable Entity) is far more semantically accurate. It explicitly tells the client: "The server understands the content type of your request, and the JSON syntaxx you sent is perfectly valid, but the server was unable to process the contained instructions due to semantic errors." In this specific case, the semantic error is a violation of referential integrity (attempting to map a sensor to a roomId that cannot be validated). Using 422 separates payload-logic errors from network-routing errors.
 
-
 # Question 9
 
 # Exposing internal Java stack traces is a severe "Information Disclosure" vulnerability. From a defensive cybersecurity standpoint, it violates the principle of least privilege regarding system information and provides attackers with free reconnaissance data.
