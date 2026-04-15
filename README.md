@@ -81,3 +81,13 @@
 
 # By utilizing a generic ExceptionMapper<Throwable>, we sanitize the output, returning a sterile 500 error that acknowledges the failure without handing attackers a blueprint of our internal systems.
 
+
+# Question 10
+
+# tilizing JAX-RS filters provides three major architectural advantages rooted in the principles of Aspect-Oriented Programming (AOP):
+
+# 1. Separation of Concerns: A resource method (like getRoom) should have one single responsibility: executing the business logic of retrieving a room. By pulling the logging logic out and placing it into a filter, our controller classes remain incredibly clean and highly readable.
+
+# 2. The DRY Principle (Don't Repeat Yourself): If an API has 50 different endpoints, manually inserting Logger.info() into every method is a maintenance nightmare. If the engineering team later decides to change the log format to include timestamps, they would have to modify 50 different files. With a filter, we write the logic exactly once, and it globally applies to the entire application.
+
+# 3. Guaranteed Execution: If we put logging inside a resource method, and the user sends a bad URL that triggers a 404 Not Found before the framework routes the request to our method, that request is never logged. A ContainerRequestFilter catches the traffic at the absolute edge of the application, guaranteeing 100% observability for every incoming ping and outgoing status code, regardless of internal server errors or routing failures.
