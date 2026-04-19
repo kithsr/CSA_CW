@@ -1,13 +1,13 @@
 # Question 01
 
-# In JAX-RS, the default lifecyce of a Resource class (like SensorRoomResource) is per-request. This means the JAX-RS runtime instatiates a brand new object of the class for every single incoming HTTP request, and then destroys it after the response is sent. It is not a singleton by default.
+# In JAX-RS, the default lifecycle of a Resource class (like SensorRoomResource) is per-request. This means the JAX-RS runtime instantiates a brand new object of the class for every single incoming HTTP request, and then destroys it after the response is sent. It is not a singleton by default.
 
-# Because a new instance is created every time, we cannot store out system's data in statndard instance variables (like a regular ArrayList inside a class), as the data would be wiped out after every request. To prevent data loss, we must externalize our storage into a static, shared structure (like DatabaseClass). Furthermore, because multiple requests can hit the server at the exact same millisencond, multiple resource instances will try to read/write to tat shared database simultaneously. To prevent race conditions and thread-interference, we must use thread-safe data structures like ConcurrentHashMap rather than a standard Hashmap.
+# Because a new instance is created every time, we cannot store out system's data in standard instance variables (like a regular ArrayList inside a class), as the data would be wiped out after every request. To prevent data loss, we must externalize our storage into a static, shared structure (like DatabaseClass). Furthermore, because multiple requests can hit the server at the exact same millisencond, multiple resource instances will try to read/write to tat shared database simultaneously. To prevent race conditions and thread-interference, we must use thread-safe data structures like ConcurrentHashMap rather than a standard Hashmap.
 
 
 # Question 02
 
-# HATEOAS (Hypermedia As The Enginer Of Application State) is the highest level of REST maturity (Level 3 on the Richardson Maturity Model). It is considered a hallmark of advanced design because it transforms an API from a static set of endpoints into a dynamically discoverable web of resources.
+# HATEOAS (Hypermedia As The Engine Of Application State) is the highest level of REST maturity (Level 3 on the Richardson Maturity Model). It is considered a hallmark of advanced design because it transforms an API from a static set of endpoints into a dynamically discoverable web of resources.
 
 # Without HATEOAS, client developers must hardccode specific URLs into their frontend applications and rely entirely on static, out-of-band documentation (like a PDF or Swagger page) to know what actions are available. With HATEOAS, the server embeds navigational links directly inside the JSON responses. This benefits client developers by decoupling their code from the server's specific routing structure; if the backend URLs change in the future, the client application won't break because it dynamically follows the links provided by the server, much like a human navigating a website via hyperlinks.
 
