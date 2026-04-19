@@ -91,3 +91,5 @@
 # 2. The DRY Principle (Don't Repeat Yourself): If an API has 50 different endpoints, manually inserting Logger.info() into every method is a maintenance nightmare. If the engineering team later decides to change the log format to include timestamps, they would have to modify 50 different files. With a filter, we write the logic exactly once, and it globally applies to the entire application.
 
 # 3. Guaranteed Execution: If we put logging inside a resource method, and the user sends a bad URL that triggers a 404 Not Found before the framework routes the request to our method, that request is never logged. A ContainerRequestFilter catches the traffic at the absolute edge of the application, guaranteeing 100% observability for every incoming ping and outgoing status code, regardless of internal server errors or routing failures.
+
+# Part 5 end
