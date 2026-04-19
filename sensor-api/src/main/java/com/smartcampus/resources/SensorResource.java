@@ -27,16 +27,16 @@ public class SensorResource {
     // 1. POST /api/v1/sensors : Register a new sensor
     @POST
     public Response addSensor(Sensor sensor, @Context UriInfo uriInfo) {
-        
-        // NEW PART 5.2 LOGIC: Throw the custom exception for 422 mapping!
-        if (sensor.getRoomId() == null || !rooms.containsKey(sensor.getRoomId())) {
-            throw new LinkedResourceNotFoundException("Cannot create sensor: The specified roomId '" + sensor.getRoomId() + "' does not exist in the system.");
-        }
 
         if (sensor.getId() == null || sensor.getId().trim().isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST)
                            .entity("{\"error\": \"Sensor ID is required\"}")
                            .build();
+        }
+
+        // NEW PART 5.2 LOGIC: Throw the custom exception for 422 mapping!
+        if (sensor.getRoomId() == null || !rooms.containsKey(sensor.getRoomId())) {
+            throw new LinkedResourceNotFoundException("Cannot create sensor: The specified roomId '" + sensor.getRoomId() + "' does not exist in the system.");
         }
 
         sensors.put(sensor.getId(), sensor);

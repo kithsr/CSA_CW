@@ -39,13 +39,13 @@
 
 # The @Consumes(MediaType.APPLICATION_JSON) annotation acts as a strict gateway filter for the method. If a client attempts to send data with a Content-Type header of text/plain or application/xml, the JAX-RS runtime (Jersey) intercepts the request before it even reaches our Java method execution.
 
-# Recognizing the mismatch between what the client send and what the endpoint aaccepts, JAX-RS automatically aborts the request and returns a standard 415 Unsupported Media Type HTTP status code to the client. The technical consequence is highly beneficial: it completely protects our backend logic from attempting to parse incompatible data formats, preventing runtime crashes and enforcing a strict, predictable API contract.
+# Recognizing the mismatch between what the client sends and what the endpoint accepts, JAX-RS automatically aborts the request and returns a standard 415 Unsupported Media Type HTTP status code to the client. The technical consequence is highly beneficial: it completely protects our backend logic from attempting to parse incompatible data formats, preventing runtime crashes and enforcing a strict, predictable API contract.
 
 # Question 6
 
 # In RESTful architecture, URIs should represent the resource hierarchy and identity, while query parameters should represent modifiers to the request.
 
-#  1. Semantic Correctness: The path /api/v1/sensors points to the entire collection of sensors. Filtering by type does not create a new hierarchical resource; it simply returns a modified view of the existing collection. Therefore, ?type=C02 is sematically correct.
+#  1. Semantic Correctness: The path /api/v1/sensors points to the entire collection of sensors. Filtering by type does not create a new hierarchical resource; it simply returns a modified view of the existing collection. Therefore, ?type=C02 is semantically correct.
 
 #  2. Optionality and Stacking: Query parameters are inherently optional, making it easy to use the exact same endpoint to fetch all sensors or a filtered list. Furthermore, query parameters stack cleanly  (e.g., ?type=C02&status=ACTIVE). If we used path variables (/api/v1/sensors/type/C02), the routing becomes incredibly rigid, deeply nested, and difficult to maintain if we want to add more optional filters in the future.
 
