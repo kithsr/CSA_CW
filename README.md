@@ -53,7 +53,7 @@
 
 # Question 7
 
-# The Sub-Resource Locator pattern is essential for managing complexity and adhering to the Single Responsibility Principle as an API Scales.
+# The Sub-Resource Locator pattern is essential for managing complexity and adhering to the Single Responsibility Principle as an API scales.
 
 # If we defined every deeply nested path (like /sensors/{id}/readings/{rid}) inside a single SensorResource class, that controller would quickly transform into an unmaintainable "God Object," consisting of thousands of lines of code handling unrelated business logic (e.g., sensor metadata processing alongside massive arrays of historical telemetry data).
 
