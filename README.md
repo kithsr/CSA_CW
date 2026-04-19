@@ -17,9 +17,9 @@
 
 # This decision represents a classic architectural trade-off between network bandwidth and client-side processing:
 
-# Returning Full Objects: This consumes more network bandwidth upfront because the payload is larger. However, it significantly reduces client-side processing and network latency. The client gets all necessary data in a single HTTP request, preventing the infamous "N+1 query problem" where the client would have to make dozenns of subsequent GET requests just to render a basic dashboard.
+# Returning Full Objects: This consumes more network bandwidth upfront because the payload is larger. However, it significantly reduces client-side processing and network latency. The client gets all necessary data in a single HTTP request, preventing the infamous "N+1 query problem" where the client would have to make dozens of subsequent GET requests just to render a basic dashboard.
 
-# Returning Only IDs: This minimizes the initial payload size and saves bandwidth. However, it shifts a massic processing burden onto the client. If the client needs to display the names and capacities of those rooms, it must parse the array of IDs and iterate through them, firing off a separate HTTP request for every single room. In mobile or low-latency environments, estabilishing that many HTTP connections is hightly inefficient.
+# Returning Only IDs: This minimizes the initial payload size and saves bandwidth. However, it shifts a massive processing burden onto the client. If the client needs to display the names and capacities of those rooms, it must parse the array of IDs and iterate through them, firing off a separate HTTP request for every single room. In mobile or low-latency environments, establishing that many HTTP connections is highly inefficient.
 
 # Question 04
 
@@ -31,7 +31,7 @@
 
 #   1. Request 1: The servers finds LTB-301, deletes it from the ConcurrentHashMap, and returns the 204 No Content status. The server stable has changed (the room is gone)
 
-#   2. Request 2 & 3: The server searches for LTB-301, sees that it evalates to null, and immediately returns a 404 Not Found status. Crucially, the state of the server's database remains completely unchanged by these subsequest requests. Because the final state of the server is identical whether the client fired the request once or one hundred times, the operation fulfills the strict definition of REST indempotency.
+#   2. Request 2 & 3: The server searches for LTB-301, sees that it evaluates to null, and immediately returns a 404 Not Found status. Crucially, the state of the server's database remains completely unchanged by these subsequent requests. Because the final state of the server is identical whether the client fired the request once or one hundred times, the operation fulfills the strict definition of REST idempotency.
 
 # Part 02 end
 
