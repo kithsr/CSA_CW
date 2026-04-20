@@ -93,3 +93,230 @@
 # 3. Guaranteed Execution: If we put logging inside a resource method, and the user sends a bad URL that triggers a 404 Not Found before the framework routes the request to our method, that request is never logged. A ContainerRequestFilter catches the traffic at the absolute edge of the application, guaranteeing 100% observability for every incoming ping and outgoing status code, regardless of internal server errors or routing failures.
 
 # Part 5 end
+
+---
+
+# Smart Campus Sensor API
+
+## API Overview
+
+This is a RESTful API for managing sensors and rooms in a smart campus environment. It's built using JAX-RS (Jersey 2.35) with an embedded Grizzly HTTP server, so there's no need for a separate application server like Tomcat.
+
+The base URL once the server is running is: `http://localhost:8080/api/v1/`
+
+There are two main resources — **rooms** and **sensors** — plus a nested readings sub-resource under each sensor. A quick summary of what's available:
+
+- `GET /` — discovery endpoint, returns a list of all top-level resources
+- `GET /rooms` — list all rooms
+- `POST /rooms` — create a new room
+- `GET /rooms/{roomId}` — get a single room by ID
+- `DELETE /rooms/{roomId}` — delete a room (blocked if sensors are still assigned to it)
+- `GET /rooms/{roomId}/sensors` — list all sensors inside a specific room
+- `GET /sensors` — list all sensors, with an optional `?type=` filter
+- `POST /sensors` — register a new sensor (must include a valid `roomId`)
+- `GET /sensors/{sensorId}/readings` — get all historical readings for a sensor
+- `POST /sensors/{sensorId}/readings` — add a new reading (blocked if sensor is in MAINTENANCE)
+
+A few things worth noting about the design:
+
+- Data is stored in-memory using `ConcurrentHashMap` inside `DatabaseClass`. This is shared across all requests because JAX-RS creates a new resource class instance per request, so instance variables don't persist.
+- Each domain error (room not found, sensor in maintenance, etc.) has its own exception and mapper, so the API always returns a clean JSON error body instead of a raw stack trace.
+- A `GenericExceptionMapper` sits at the bottom as a catch-all for any unexpected errors, returning a plain `500` without leaking any internal details.
+- A `ContainerRequestFilter` logs every incoming request at the application boundary, so even requests that 404 before hitting a resource method still get logged.
+- Sensor readings live under `/sensors/{sensorId}/readings` via a Sub-Resource Locator, keeping the telemetry logic in its own class rather than bloating `SensorResource`.
+
+---
+
+## How to Build and Run
+
+You'll need **Java 17** and **Maven 3.8+** installed. You can check with `java -version` and `mvn -version`.
+
+**1. Clone the repo**
+
+```bash
+git clone https://github.com/<your-username>/CSA_CW.git
+cd CSA_CW
+```
+
+**2. Move into the project folder**
+
+```bash
+cd sensor-api
+```
+
+**3. Build and run the tests**
+
+```bash
+mvn clean test
+```
+
+This should finish with `BUILD SUCCESS`. If any tests fail, check the output in `target/surefire-reports/`.
+
+**4. Package it into a JAR**
+
+```bash
+mvn package -DskipTests
+```
+
+This creates `target/sensor-api-1.0-SNAPSHOT.jar`.
+
+**5. Start the server**
+
+```bash
+mvn exec:java -Dexec.mainClass="com.smartcampus.Main"
+```
+
+Or if you prefer running the JAR directly:
+
+```bash
+java -cp target/sensor-api-1.0-SNAPSHOT.jar com.smartcampus.Main
+```
+
+Once it's up you'll see:
+
+```
+Smart Campus API started! Access discovery at: http://localhost:8080/api/v1/
+Hit enter to stop it...
+```
+
+Press **Enter** in that terminal to shut it down.
+
+---
+
+## Sample curl Commands
+
+Open a second terminal while the server is running and try these out. Run them in order — each one builds on the previous.
+
+---
+
+**1. Check the discovery endpoint**
+
+```bash
+curl -X GET http://localhost:8080/api/v1/ -H "Accept: application/json"
+```
+
+```json
+{
+  "api_version": "v1.0",
+  "admin_contact": "admin@smartcampus.westminster.ac.uk",
+  "resources": {
+    "rooms": "/api/v1/rooms",
+    "sensors": "/api/v1/sensors"
+  }
+}
+```
+
+---
+
+**2. Create a room**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/rooms \
+  -H "Content-Type: application/json" \
+  -d '{"id": "LTB-301", "name": "Lecture Theatre B", "capacity": 120}'
+```
+
+```json
+{
+  "id": "LTB-301",
+  "name": "Lecture Theatre B",
+  "capacity": 120,
+  "sensorIds": []
+}
+```
+
+---
+
+**3. Register a sensor in that room**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/sensors \
+  -H "Content-Type: application/json" \
+  -d '{"id": "SENS-001", "type": "CO2", "status": "ACTIVE", "roomId": "LTB-301", "currentValue": 0.0}'
+```
+
+```json
+{
+  "id": "SENS-001",
+  "type": "CO2",
+  "status": "ACTIVE",
+  "roomId": "LTB-301",
+  "currentValue": 0.0
+}
+```
+
+---
+
+**4. Post a reading for that sensor**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/sensors/SENS-001/readings \
+  -H "Content-Type: application/json" \
+  -d '{"value": 412.5, "unit": "ppm", "timestamp": "2026-04-20T10:30:00Z"}'
+```
+
+```json
+{
+  "value": 412.5,
+  "unit": "ppm",
+  "timestamp": "2026-04-20T10:30:00Z"
+}
+```
+
+---
+
+**5. Get all sensors inside a room**
+
+```bash
+curl -X GET http://localhost:8080/api/v1/rooms/LTB-301/sensors \
+  -H "Accept: application/json"
+```
+
+```json
+[
+  {
+    "id": "SENS-001",
+    "type": "CO2",
+    "status": "ACTIVE",
+    "roomId": "LTB-301",
+    "currentValue": 412.5
+  }
+]
+```
+
+---
+
+**6. Filter sensors by type**
+
+```bash
+curl -X GET "http://localhost:8080/api/v1/sensors?type=CO2" \
+  -H "Accept: application/json"
+```
+
+```json
+[
+  {
+    "id": "SENS-001",
+    "type": "CO2",
+    "status": "ACTIVE",
+    "roomId": "LTB-301",
+    "currentValue": 412.5
+  }
+]
+```
+
+---
+
+**7. Try deleting a room that still has sensors (should fail)**
+
+```bash
+curl -X DELETE http://localhost:8080/api/v1/rooms/LTB-301 \
+  -H "Accept: application/json"
+```
+
+```json
+{
+  "errorMessage": "The room is currently occupied by active hardware. Please remove all sensors before decommissioning the room.",
+  "errorCode": 409
+}
+```
