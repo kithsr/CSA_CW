@@ -13,7 +13,7 @@
 
  Without HATEOAS, client developers must hardccode specific URLs into their frontend applications and rely entirely on static, out-of-band documentation (like a PDF or Swagger page) to know what actions are available. With HATEOAS, the server embeds navigational links directly inside the JSON responses. This benefits client developers by decoupling their code from the server's specific routing structure; if the backend URLs change in the future, the client application won't break because it dynamically follows the links provided by the server, much like a human navigating a website via hyperlinks.
 
-# Part 01 end
+## Part 01 end
 
 ## Question 03
 
@@ -23,7 +23,7 @@
 
  Returning Only IDs: This minimizes the initial payload size and saves bandwidth. However, it shifts a massive processing burden onto the client. If the client needs to display the names and capacities of those rooms, it must parse the array of IDs and iterate through them, firing off a separate HTTP request for every single room. In mobile or low-latency environments, establishing that many HTTP connections is highly inefficient.
 
-# Question 04
+## Question 04
 
  Yes, the DELETE operation in this implementation is strictly idempotent.
 
@@ -35,7 +35,7 @@
 
    2. `Request 2 & 3`: The server searches for LTB-301, sees that it evaluates to null, and immediately returns a 404 Not Found status. Crucially, the state of the server's database remains completely unchanged by these subsequent requests. Because the final state of the server is identical whether the client fired the request once or one hundred times, the operation fulfills the strict definition of REST idempotency.
 
-# Part 02 end
+## Part 02 end
 
 ## Question 5
 
@@ -51,7 +51,7 @@
 
   2. `Optionality and Stacking`: Query parameters are inherently optional, making it easy to use the exact same endpoint to fetch all sensors or a filtered list. Furthermore, query parameters stack cleanly  (e.g., ?type=C02&status=ACTIVE). If we used path variables (/api/v1/sensors/type/C02), the routing becomes incredibly rigid, deeply nested, and difficult to maintain if we want to add more optional filters in the future.
 
-# Part 3 end
+## Part 3 end
 
 ## Question 7
 
@@ -86,7 +86,7 @@ By utilizing a generic ExceptionMapper<Throwable>, we sanitize the output, retur
 
 ## Question 10
 
-tilizing JAX-RS filters provides three major architectural advantages rooted in the principles of Aspect-Oriented Programming (AOP):
+utilizing JAX-RS filters provides three major architectural advantages rooted in the principles of Aspect-Oriented Programming (AOP):
 
  1. `Separation of Concerns`: A resource method (like getRoom) should have one single responsibility: executing the business logic of retrieving a room. By pulling the logging logic out and placing it into a filter, our controller classes remain incredibly clean and highly readable.
 
@@ -94,7 +94,7 @@ tilizing JAX-RS filters provides three major architectural advantages rooted in 
 
  3. `Guaranteed Execution`: If we put logging inside a resource method, and the user sends a bad URL that triggers a 404 Not Found before the framework routes the request to our method, that request is never logged. A ContainerRequestFilter catches the traffic at the absolute edge of the application, guaranteeing 100% observability for every incoming ping and outgoing status code, regardless of internal server errors or routing failures.
 
-# Part 5 end
+## Part 5 end
 
 ----------------------------------------------------------------------------------------------------------------
 
@@ -106,18 +106,18 @@ This is a RESTful API for managing sensors and rooms in a smart campus environme
 
 The base URL once the server is running is: `http://localhost:8080/api/v1/`
 
-There are two main resources — **rooms** and **sensors** — plus a nested readings sub-resource under each sensor. A quick summary of what's available:
+There are two main resources - **rooms** and **sensors** - plus a nested readings sub-resource under each sensor. A quick summary of what's available:
 
-- `GET /` — discovery endpoint, returns a list of all top-level resources
-- `GET /rooms` — list all rooms
-- `POST /rooms` — create a new room
-- `GET /rooms/{roomId}` — get a single room by ID
-- `DELETE /rooms/{roomId}` — delete a room (blocked if sensors are still assigned to it)
-- `GET /rooms/{roomId}/sensors` — list all sensors inside a specific room
-- `GET /sensors` — list all sensors, with an optional `?type=` filter
-- `POST /sensors` — register a new sensor (must include a valid `roomId`)
-- `GET /sensors/{sensorId}/readings` — get all historical readings for a sensor
-- `POST /sensors/{sensorId}/readings` — add a new reading (blocked if sensor is in MAINTENANCE)
+- `GET /` - discovery endpoint, returns a list of all top-level resources
+- `GET /rooms` - list all rooms
+- `POST /rooms` - create a new room
+- `GET /rooms/{roomId}` - get a single room by ID
+- `DELETE /rooms/{roomId}` - delete a room (blocked if sensors are still assigned to it)
+- `GET /rooms/{roomId}/sensors` - list all sensors inside a specific room
+- `GET /sensors` - list all sensors, with an optional `?type=` filter
+- `POST /sensors` - register a new sensor (must include a valid `roomId`)
+- `GET /sensors/{sensorId}/readings` - get all historical readings for a sensor
+- `POST /sensors/{sensorId}/readings` - add a new reading (blocked if sensor is in MAINTENANCE)
 
 A few things worth noting about the design:
 
