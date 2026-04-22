@@ -4,14 +4,16 @@
 
  In JAX-RS, the default lifecycle of a Resource class (like SensorRoomResource) is per-request. This means the JAX-RS runtime instantiates a brand new object of the class for every single incoming HTTP request, and then destroys it after the response is sent. It is not a singleton by default.
 
- Because a new instance is created every time, we cannot store out system's data in standard instance variables (like a regular ArrayList inside a class), as the data would be wiped out after every request. To prevent data loss, we must externalize our storage into a static, shared structure (like DatabaseClass). Furthermore, because multiple requests can hit the server at the exact same millisencond, multiple resource instances will try to read/write to tat shared database simultaneously. To prevent race conditions and thread-interference, we must use thread-safe data structures like ConcurrentHashMap rather than a standard Hashmap.
+ Because a new instance is created every time, we cannot store our system's data in standard instance variables (like a regular ArrayList inside a class), as the data would be wiped out after every request. To prevent data loss, we must externalize our storage into a static, shared structure (like DatabaseClass). Furthermore, because multiple requests can hit the server at the exact same millisecond, multiple resource instances will try to read/write to that shared database simultaneously. To prevent race conditions and thread-interference, we must use thread-safe data structures like ConcurrentHashMap rather than a standard Hashmap.
+
+ "Alternatively, JAX-RS supports the @Singleton annotation to force a single shared instance across all requests, but this requires explicit synchronization of all methods to prevent thread interference."
 
 
 ## Question 02
 
  HATEOAS (Hypermedia As The Engine Of Application State) is the highest level of REST maturity (Level 3 on the Richardson Maturity Model). It is considered a hallmark of advanced design because it transforms an API from a static set of endpoints into a dynamically discoverable web of resources.
 
- Without HATEOAS, client developers must hardccode specific URLs into their frontend applications and rely entirely on static, out-of-band documentation (like a PDF or Swagger page) to know what actions are available. With HATEOAS, the server embeds navigational links directly inside the JSON responses. This benefits client developers by decoupling their code from the server's specific routing structure; if the backend URLs change in the future, the client application won't break because it dynamically follows the links provided by the server, much like a human navigating a website via hyperlinks.
+ Without HATEOAS, client developers must hardcode specific URLs into their frontend applications and rely entirely on static, out-of-band documentation (like a PDF or Swagger page) to know what actions are available. With HATEOAS, the server embeds navigational links directly inside the JSON responses. This benefits client developers by decoupling their code from the server's specific routing structure; if the backend URLs change in the future, the client application won't break because it dynamically follows the links provided by the server, much like a human navigating a website via hyperlinks.
 
 ## Part 01 end
 
@@ -67,7 +69,7 @@
 
  HTTP 404 (Not Found) implies that the target routing URL itself does not exist. If a client sends a POST request to /api/v1/sensors, that endpoint does exist and is actively listening. Returning a 404 in this scenario would be highly misleading, as the client would assume they have a typo in their URL path or that the server is down.
 
- HTTP 422 (Unprocessable Entity) is far more semantically accurate. It explicitly tells the client: "The server understands the content type of your request, and the JSON syntaxx you sent is perfectly valid, but the server was unable to process the contained instructions due to semantic errors." In this specific case, the semantic error is a violation of referential integrity (attempting to map a sensor to a roomId that cannot be validated). Using 422 separates payload-logic errors from network-routing errors.
+ HTTP 422 (Unprocessable Entity) is far more semantically accurate. It explicitly tells the client: "The server understands the content type of your request, and the JSON syntax you sent is perfectly valid, but the server was unable to process the contained instructions due to semantic errors." In this specific case, the semantic error is a violation of referential integrity (attempting to map a sensor to a roomId that cannot be validated). Using 422 separates payload-logic errors from network-routing errors.
 
 ## Question 9
 
