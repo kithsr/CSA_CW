@@ -13,20 +13,30 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Sub-resource class responsible for managing SensorReading entities.
+ * Instantiated by SensorResource via a sub-resource locator — not registered directly.
+ */
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class SensorReadingResource {
 
-    private String sensorId;
+    private String sensorId; // Injected by the parent SensorResource locator
     private Map<String, Sensor> sensors = DatabaseClass.getSensors();
     private Map<String, List<SensorReading>> allReadings = DatabaseClass.getSensorReadings();
 
-    // The constructor catches the ID passed down from the parent
+    /**
+     * Constructor called by the sub-resource locator in SensorResource.
+     * Receives the sensorId from the parent URL path segment.
+     */
     public SensorReadingResource(String sensorId) {
         this.sensorId = sensorId;
     }
 
-    // GET / : Fetch the history
+    /**
+     * GET /api/v1/sensors/{sensorId}/readings
+     * Returns the full historical log of readings for the specified sensor.
+     */
     @GET
     public Response getReadings() {
         if (!sensors.containsKey(sensorId)) {
@@ -34,13 +44,18 @@ public class SensorReadingResource {
                     .entity("{\"errorMessage\": \"Sensor not found\", \"errorCode\": 404}")
                     .build();
         }
-        
-        // Return the list of readings, or an empty list if none exist yet
+
+        // Return the reading history, or an empty list if no readings exist yet
         List<SensorReading> readings = allReadings.getOrDefault(sensorId, new ArrayList<>());
         return Response.ok(readings).build();
     }
 
-    // POST / : Append new reading AND update parent
+    /**
+     * POST /api/v1/sensors/{sensorId}/readings
+     * Appends a new reading to the sensor's history and updates the parent
+     * sensor's currentValue as a side effect.
+     * Throws SensorUnavailableException (403) if the sensor is in MAINTENANCE status.
+     */
     @POST
     public Response addReading(SensorReading reading) {
         if (!sensors.containsKey(sensorId)) {
@@ -51,15 +66,15 @@ public class SensorReadingResource {
 
         Sensor parentSensor = sensors.get(sensorId);
 
-        // NEW PART 5.3 LOGIC: Check the status state constraint!
+        // Reject readings from sensors in MAINTENANCE — hardware is physically offline
         if ("MAINTENANCE".equalsIgnoreCase(parentSensor.getStatus())) {
             throw new SensorUnavailableException("Sensor is currently in MAINTENANCE mode. Physically disconnected hardware cannot accept new readings.");
         }
 
-        // 1. Save the reading to the historical log
+        // Persist the reading to the historical log
         allReadings.computeIfAbsent(sensorId, k -> new ArrayList<>()).add(reading);
 
-        // 2. THE SIDE EFFECT: Update the parent Sensor's currentValue
+        // Side effect: sync the parent sensor's currentValue with the latest measurement
         parentSensor.setCurrentValue(reading.getValue());
 
         return Response.status(Response.Status.CREATED).entity(reading).build();

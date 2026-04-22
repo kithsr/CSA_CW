@@ -16,15 +16,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * JAX-RS resource class for managing Sensor entities.
+ * Exposes registration and retrieval operations under /api/v1/sensors.
+ */
 @Path("/sensors")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class SensorResource {
 
+    // In-memory data stores shared across the application
     private Map<String, Sensor> sensors = DatabaseClass.getSensors();
     private Map<String, Room> rooms = DatabaseClass.getRooms();
 
-    // 1. POST /api/v1/sensors : Register a new sensor
+    /**
+     * POST /api/v1/sensors
+     * Registers a new sensor. Validates that the referenced roomId exists
+     * before persisting — throws LinkedResourceNotFoundException (422) if not.
+     */
     @POST
     public Response addSensor(Sensor sensor, @Context UriInfo uriInfo) {
 
@@ -34,26 +43,33 @@ public class SensorResource {
                            .build();
         }
 
-        // NEW PART 5.2 LOGIC: Throw the custom exception for 422 mapping!
+        // Validate referential integrity: the parent room must exist before linking the sensor
         if (sensor.getRoomId() == null || !rooms.containsKey(sensor.getRoomId())) {
             throw new LinkedResourceNotFoundException("Cannot create sensor: The specified roomId '" + sensor.getRoomId() + "' does not exist in the system.");
         }
 
         sensors.put(sensor.getId(), sensor);
 
+        // Register this sensor ID on the parent room to maintain the bidirectional link
         Room room = rooms.get(sensor.getRoomId());
         room.getSensorIds().add(sensor.getId());
 
+        // Return 201 Created with Location header pointing to the new resource
         URI uri = uriInfo.getAbsolutePathBuilder().path(sensor.getId()).build();
         return Response.created(uri).entity(sensor).build();
     }
 
-    // 2. GET /api/v1/sensors?type=... : Filtered Retrieval
+    /**
+     * GET /api/v1/sensors?type={type}
+     * Returns all sensors, optionally filtered by type using a query parameter.
+     * @QueryParam is used over @PathParam because type is an optional filter on a
+     * collection, not an identifier for a specific resource.
+     */
     @GET
     public Response getSensors(@QueryParam("type") String type) {
         List<Sensor> sensorList = new ArrayList<>(sensors.values());
 
-        // Business Logic: If the user provided a query parameter, filter the list
+        // Apply type filter if provided
         if (type != null && !type.trim().isEmpty()) {
             sensorList = sensorList.stream()
                                    .filter(s -> type.equalsIgnoreCase(s.getType()))
@@ -63,10 +79,13 @@ public class SensorResource {
         return Response.ok(sensorList).build();
     }
 
-    // 3. Sub-Resource Locator for nested readings (PART 4)
+    /**
+     * Sub-Resource Locator for /api/v1/sensors/{sensorId}/readings
+     * This method has no HTTP verb — it delegates handling to SensorReadingResource,
+     * passing the sensorId down via constructor injection.
+     */
     @Path("/{sensorId}/readings")
     public SensorReadingResource getSensorReadingResource(@PathParam("sensorId") String sensorId) {
-        // We pass the sensorId down into the new class!
         return new SensorReadingResource(sensorId);
     }
 }

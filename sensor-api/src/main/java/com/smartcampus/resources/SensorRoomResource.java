@@ -13,24 +13,34 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.smartcampus.exceptions.DataNotFoundException; 
-import com.smartcampus.exceptions.RoomNotEmptyException; // <-- NEW: Added Part 5 exception import
+import com.smartcampus.exceptions.DataNotFoundException;
+import com.smartcampus.exceptions.RoomNotEmptyException;
 
-@Path("/rooms") 
-@Produces(MediaType.APPLICATION_JSON) 
-@Consumes(MediaType.APPLICATION_JSON) 
+/**
+ * JAX-RS resource class for managing Room entities.
+ * Exposes CRUD operations under the /api/v1/rooms path.
+ */
+@Path("/rooms")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 public class SensorRoomResource {
 
-    // Access our thread-safe "database"
+    // In-memory ConcurrentHashMap acting as the data store for rooms
     private Map<String, Room> rooms = DatabaseClass.getRooms();
 
-    // 1. GET /api/v1/rooms : Provide a comprehensive list of all rooms
+    /**
+     * GET /api/v1/rooms
+     * Returns a list of all rooms currently registered in the system.
+     */
     @GET
     public List<Room> getAllRooms() {
         return new ArrayList<>(rooms.values());
     }
 
-    // 2. POST /api/v1/rooms : Enable creation of new rooms
+    /**
+     * POST /api/v1/rooms
+     * Creates a new room and returns 201 Created with a Location header.
+     */
     @POST
     public Response addRoom(Room room, @Context UriInfo uriInfo) {
         if (room.getId() == null || room.getId().trim().isEmpty()) {
@@ -38,14 +48,18 @@ public class SensorRoomResource {
                            .entity("{\"error\": \"Room ID is required\"}")
                            .build();
         }
-        
+
         rooms.put(room.getId(), room);
-        
+
+        // Build the Location header URI pointing to the newly created resource
         URI uri = uriInfo.getAbsolutePathBuilder().path(room.getId()).build();
         return Response.created(uri).entity(room).build();
     }
 
-    // 3. GET /api/v1/rooms/{roomId} : Fetch detailed metadata for a specific room
+    /**
+     * GET /api/v1/rooms/{roomId}
+     * Retrieves a specific room by its ID. Throws DataNotFoundException (404) if not found.
+     */
     @GET
     @Path("/{roomId}")
     public Response getRoom(@PathParam("roomId") String roomId) {
@@ -56,26 +70,33 @@ public class SensorRoomResource {
         return Response.ok(room).build();
     }
 
-    // 4. DELETE /api/v1/rooms/{roomId} : Room Deletion & Safety Logic
+    /**
+     * DELETE /api/v1/rooms/{roomId}
+     * Deletes a room only if it has no active sensors.
+     * Throws RoomNotEmptyException (409) to enforce referential integrity.
+     */
     @DELETE
     @Path("/{roomId}")
     public Response deleteRoom(@PathParam("roomId") String roomId) {
         Room room = rooms.get(roomId);
-        
+
         if (room == null) {
-            return Response.status(Response.Status.NOT_FOUND).build(); 
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
-        
-        // NEW PART 5 LOGIC: Throwing the custom exception to trigger our Mapper!
+
+        // Prevent deletion if sensors still reference this room
         if (room.getSensorIds() != null && !room.getSensorIds().isEmpty()) {
             throw new RoomNotEmptyException("The room is currently occupied by active hardware. Please remove all sensors before decommissioning the room.");
         }
-        
+
         rooms.remove(roomId);
-        return Response.noContent().build(); 
+        return Response.noContent().build();
     }
 
-    // 5. GET /api/v1/rooms/{roomId}/sensors : Deep Nesting (Part 4)
+    /**
+     * GET /api/v1/rooms/{roomId}/sensors
+     * Returns all sensors deployed in the specified room (deep nesting).
+     */
     @GET
     @Path("/{roomId}/sensors")
     public Response getSensorsInRoom(@PathParam("roomId") String roomId) {
