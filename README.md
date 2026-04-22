@@ -104,7 +104,7 @@ utilizing JAX-RS filters provides three major architectural advantages rooted in
 
 ## API Overview
 
-This is a RESTful API for managing sensors and rooms in a smart campus environment. It's built using JAX-RS (Jersey 2.35) with an embedded Grizzly HTTP server, so there's no need for a separate application server like Tomcat.
+This is a RESTful API for managing sensors and rooms in a smart campus environment. It's built using JAX-RS (Jersey 2.35) and deployed on **Apache Tomcat 9** as a WAR file.
 
 The base URL once the server is running is: `http://localhost:8080/api/v1/`
 
@@ -133,22 +133,60 @@ A few things worth noting about the design:
 
 ## How to Build and Run
 
-You'll need **Java 17** and **Maven 3.8+** installed. You can check with `java -version` and `mvn -version`.
+### Prerequisites
 
-**1. Clone the repo**
+You'll need:
+- **Java 17** (check with `java -version`)
+- **Maven 3.8+** (check with `mvn -version`)
+- **Apache Tomcat 9.0+** installed locally
+
+### Option 1: Deploy via NetBeans IDE (Recommended)
+
+**1. Clone the repository**
 
 ```bash
 git clone https://github.com/<your-username>/CSA_CW.git
 cd CSA_CW
 ```
 
-**2. Move into the project folder**
+**2. Open the project in NetBeans**
+
+- File → Open Project → Navigate to `CSA_CW/sensor-api`
+- NetBeans will automatically detect it as a Maven project
+
+**3. Configure Tomcat in NetBeans**
+
+- Tools → Servers → Add Server → Apache Tomcat
+- Browse to your Tomcat installation directory (e.g., `C:\Program Files\Apache Software Foundation\Tomcat 9.0`)
+- Leave "Catalina Base" empty
+- Check "Create user if it does not exist"
+- Set username: `admin`, password: `admin`
+
+**4. Build the project**
+
+- Right-click on the `sensor-api` project → Clean and Build
+- This creates `target/sensor-api.war`
+
+**5. Deploy to Tomcat**
+
+- Right-click on the `sensor-api` project → Run
+- NetBeans will automatically deploy to Tomcat and start the server
+- Watch the Output window for: `OK - Deployed application at context path [/]`
+
+**6. Access the API**
+
+Once deployed, the API is available at: `http://localhost:8080/api/v1/`
+
+### Option 2: Manual Deployment via Maven & Tomcat
+
+**1. Clone and build**
 
 ```bash
-cd sensor-api
+git clone https://github.com/<your-username>/CSA_CW.git
+cd CSA_CW/sensor-api
 ```
 
-**3. Build and run the tests**
+**2. Run tests**
 
 ```bash
 mvn clean test
@@ -156,34 +194,54 @@ mvn clean test
 
 This should finish with `BUILD SUCCESS`. If any tests fail, check the output in `target/surefire-reports/`.
 
-**4. Package it into a JAR**
+**3. Package the WAR file**
 
 ```bash
-mvn package -DskipTests
+mvn clean package -DskipTests
 ```
 
-This creates `target/sensor-api-1.0-SNAPSHOT.jar`.
+This creates `target/sensor-api.war`.
 
-**5. Start the server**
+**4. Deploy to Tomcat**
 
+Copy the WAR file to Tomcat's webapps directory:
+
+**Windows:**
 ```bash
-mvn exec:java -Dexec.mainClass="com.smartcampus.Main"
+copy target\sensor-api.war "C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\ROOT.war"
 ```
 
-Or if you prefer running the JAR directly:
-
+**Linux/Mac:**
 ```bash
-java -cp target/sensor-api-1.0-SNAPSHOT.jar com.smartcampus.Main
+cp target/sensor-api.war /path/to/tomcat/webapps/ROOT.war
 ```
 
-Once it's up you'll see:
+**Note:** Deploying as `ROOT.war` ensures the API is accessible at `http://localhost:8080/api/v1/` without a context path.
 
-```
-Smart Campus API started! Access discovery at: http://localhost:8080/api/v1/
-Hit enter to stop it...
+**5. Start Tomcat**
+
+**Windows:**
+```bash
+cd "C:\Program Files\Apache Software Foundation\Tomcat 9.0\bin"
+catalina.bat run
 ```
 
-Press **Enter** in that terminal to shut it down.
+**Linux/Mac:**
+```bash
+cd /path/to/tomcat/bin
+./catalina.sh run
+```
+
+**6. Verify deployment**
+
+Watch the Tomcat console for:
+```
+INFO: Deployment of web application archive [ROOT.war] has finished in [X] ms
+```
+
+**7. Stop Tomcat**
+
+Press **Ctrl+C** in the terminal running Tomcat.
 
 ---
 
