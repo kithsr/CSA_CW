@@ -145,7 +145,7 @@ You'll need:
 **1. Clone the repository**
 
 ```bash
-git clone https://github.com/<your-username>/CSA_CW.git
+git clone https://github.com/kithsr/CSA_CW.git
 cd CSA_CW
 ```
 
@@ -182,7 +182,7 @@ Once deployed, the API is available at: `http://localhost:8080/api/v1/`
 **1. Clone and build**
 
 ```bash
-git clone https://github.com/<your-username>/CSA_CW.git
+git clone https://github.com/kithsr/CSA_CW.git
 cd CSA_CW/sensor-api
 ```
 
